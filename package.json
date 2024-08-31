@@ -11,7 +11,7 @@
     "dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
-    "release": "node scripts/release.js",
+    "release": "node scripts/release.mjs",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "docs": "typedoc",

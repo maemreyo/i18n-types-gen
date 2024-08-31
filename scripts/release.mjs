@@ -1,6 +1,12 @@
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
+import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// Define __filename and __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Function to run a command in the shell
 const runCommand = (command) => {
@@ -21,8 +27,8 @@ console.log("Bumping version and generating changelog...");
 runCommand("npx standard-version");
 
 // Step 3: Get the new version from package.json
-const packageJsonPath = path.join(__dirname, "../package.json");
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+const packageJsonPath = join(__dirname, "../package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
 const newVersion = packageJson.version;
 
 console.log(`New version is ${newVersion}`);
