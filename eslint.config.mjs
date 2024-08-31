@@ -7,10 +7,13 @@ const compat = new FlatCompat({
 export default [
   ...compat.config({
     parser: '@typescript-eslint/parser',
-    plugins: ['@typescript-eslint'],
+    plugins: ['@typescript-eslint', 'prettier'],
     extends: [
       'plugin:@typescript-eslint/recommended',
       'plugin:prettier/recommended',
     ],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   }),
 ];
