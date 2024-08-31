@@ -1,0 +1,46 @@
+# Node.js dependencies
+node_modules/
+.build/
+
+# TypeScript cache and build artifacts
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+
+# IDE/Editor directories and files
+.idea/
+.vscode/
+*.swp
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+
+# Next.js specific
+.next/
+out/
+
+# Coverage directory used by testing tools like Jest
+coverage/
+
+# Yarn Integrity file
+.yarn-integrity
+
+# lockfiles
+package-lock.json
+yarn.lock
