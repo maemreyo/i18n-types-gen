@@ -1,0 +1,12 @@
+{
+  "error.geolocation.denied": "User denied the request for Geolocation.",
+  "error.geolocation.timeout": "The request to get user location timed out.",
+  "error.geolocation.unavailable": "Location information is unavailable.",
+  "error.geolocation.unsupported": "Geolocation is not supported by your browser.",
+  "error.unknown": "An unknown error occurred. Please try again later.",
+  "hint.geolocation.checkSettings": "Check your device's location settings and network connection.",
+  "hint.geolocation.enableLocation": "Please enable location services in your browser settings.",
+  "hint.geolocation.moveToBetterSignal": "Try moving to an area with better signal.",
+  "hint.geolocation.outOfRange": "You are out of the allowed range. Please move closer.",
+  "hint.geolocation.unsupportedBrowser": "Your browser does not support Geolocation. Please use a different browser."
+}

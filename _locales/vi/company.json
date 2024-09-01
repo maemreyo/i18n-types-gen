@@ -1,0 +1,13 @@
+{
+  "button.createNew": "Tạo mới công ty",
+  "column.actions": "Thao tác",
+  "column.companyName": "Tên công ty",
+  "column.headquarter": "Trụ sở",
+  "description.modal.deleteCompany": "Bạn chắc chắn muốn xóa công ty",
+  "tab.branch": "Chi nhánh",
+  "tab.department": "Phòng ban",
+  "title": "Quản lý Công ty",
+  "title.companyDetail": "Chi tiết công ty",
+  "title.modal.deleteCompany": "Xóa công ty",
+  "title.updateCompany": "Cập nhật công ty"
+}

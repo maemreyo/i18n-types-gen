@@ -1,0 +1,12 @@
+{
+  "error.geolocation.denied": "Người dùng đã từ chối yêu cầu truy cập vị trí.",
+  "error.geolocation.timeout": "Yêu cầu lấy vị trí người dùng đã hết thời gian.",
+  "error.geolocation.unavailable": "Thông tin vị trí không khả dụng.",
+  "error.geolocation.unsupported": "Trình duyệt của bạn không hỗ trợ định vị địa lý.",
+  "error.unknown": "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.",
+  "hint.geolocation.checkSettings": "Hãy kiểm tra cài đặt định vị và kết nối mạng trên thiết bị của bạn.",
+  "hint.geolocation.enableLocation": "Vui lòng bật dịch vụ định vị trong cài đặt trình duyệt của bạn.",
+  "hint.geolocation.moveToBetterSignal": "Hãy thử di chuyển đến khu vực có tín hiệu tốt hơn.",
+  "hint.geolocation.outOfRange": "Bạn đang ở ngoài phạm vi cho phép. Vui lòng di chuyển đến gần hơn.",
+  "hint.geolocation.unsupportedBrowser": "Trình duyệt của bạn không hỗ trợ Định vị. Vui lòng sử dụng trình duyệt khác."
+}
