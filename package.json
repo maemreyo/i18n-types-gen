@@ -14,7 +14,9 @@
     "clean": "rm -rf dist",
     "setup": "node scripts/setup.js",
     "prettier": "prettier --write '**/*.{js,ts,tsx,json,md}'",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "release": "node scripts/release.mjs",
+    "rollback": "node scripts/rollback"
   },
   "standard-version": {
     "preset": "angular"
