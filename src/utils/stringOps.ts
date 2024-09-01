@@ -10,18 +10,16 @@ export const toPascal = (str: string): string =>
     .replace(/\.json$/, '');
 
 /**
- * Sorts an object's keys alphabetically.
+ * Sorts the keys of an object alphabetically.
  *
- * @param obj - The object to sort. It should be an object with string keys and string values.
- * @returns The sorted object with string keys and string values.
+ * @param obj - The object to sort.
+ * @returns The sorted object with keys sorted alphabetically.
  */
-export const sortKeys = (
-  obj: Record<string, string>,
-): Record<string, string> => {
+export const sortKeys = (obj: Record<string, any>): Record<string, any> => {
   return Object.keys(obj)
     .sort()
-    .reduce((result: Record<string, string>, key: string) => {
-      result[key] = obj[key];
-      return result;
-    }, {}); // Start with an empty object of type Record<string, string>
+    .reduce((sortedObj: Record<string, any>, key: string) => {
+      sortedObj[key] = obj[key];
+      return sortedObj;
+    }, {});
 };

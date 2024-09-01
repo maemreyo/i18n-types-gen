@@ -41,7 +41,8 @@ export const processLangFiles = (
 
   for (const file of files) {
     const jsonFilePath = path.join(langDir, file);
-    const jsonContent = flattenKeys(readJsonFile(jsonFilePath)); // Flatten nested keys
+    const jsonContent = readJsonFile(jsonFilePath); // Keep original nested structure
+    const flatJsonContent = flattenKeys(jsonContent); // Flatten for merging and type generation
     const interfaceName = toPascal(path.basename(file, '.json'));
 
     if (!allKeys[interfaceName]) {
@@ -49,26 +50,26 @@ export const processLangFiles = (
     }
 
     // Merge keys and check for conflicts
-    Object.keys(jsonContent).forEach((key) => {
+    Object.keys(flatJsonContent).forEach((key) => {
       if (
         allKeys[interfaceName][key] &&
-        allKeys[interfaceName][key] !== jsonContent[key]
+        allKeys[interfaceName][key] !== flatJsonContent[key]
       ) {
         logger.warn(
           `⚠️ Conflict detected: Key "${key}" has different values across languages.`,
         );
       }
-      allKeys[interfaceName][key] = jsonContent[key];
+      allKeys[interfaceName][key] = flatJsonContent[key];
     });
   }
 };
 
 /**
  * Ensures that all JSON files in a language directory contain all the merged keys,
- * sorts them, and writes the result back to the file.
+ * sorts them, and writes the result back to the file, keeping the nested structure.
  *
  * @param langDir - The path to the language directory.
- * @param allKeys - The object containing the merged keys from all languages.
+ * @param allKeys - The object containing the merged keys from all languages (flattened keys).
  */
 export const updateLangFiles = (
   langDir: string,
@@ -78,29 +79,73 @@ export const updateLangFiles = (
 
   for (const file of files) {
     const jsonFilePath = path.join(langDir, file);
-    const jsonContent: Record<string, string> = readJsonFile(jsonFilePath);
-
+    const jsonContent: Record<string, any> = readJsonFile(jsonFilePath);
     const interfaceName = toPascal(path.basename(file, '.json'));
     const allLangKeys = allKeys[interfaceName];
 
-    // Ensure all keys are present in the JSON file
-    const completeJsonContent: Record<string, string> = Object.keys(
-      allLangKeys,
-    ).reduce((result: Record<string, string>, key: string) => {
-      result[key] = jsonContent[key] || '';
-      return result;
-    }, {});
+    // Ensure all keys are present in the JSON file and maintain the nested structure
+    const updatedJsonContent = mergeNestedKeys(jsonContent, allLangKeys);
 
-    // Sort keys alphabetically
-    const sortedJsonContent = sortKeys(completeJsonContent);
-
-    // Overwrite the original JSON file with the sorted and completed keys
+    // Overwrite the original JSON file with the sorted and updated keys
     fs.writeFileSync(
       jsonFilePath,
-      JSON.stringify(sortedJsonContent, null, 2),
+      JSON.stringify(updatedJsonContent, null, 2),
       'utf-8',
     );
   }
+};
+
+/**
+ * Merges the new flat keys into the existing nested JSON structure and sorts them alphabetically at each level.
+ *
+ * @param originalContent - The original nested JSON content.
+ * @param flatKeys - The flat keys to be merged.
+ * @returns The updated nested JSON content with keys sorted at each level.
+ */
+export const mergeNestedKeys = (
+  originalContent: Record<string, any>,
+  flatKeys: Record<string, string>,
+): Record<string, any> => {
+  const nestedContent = { ...originalContent };
+
+  Object.keys(flatKeys).forEach((flatKey) => {
+    const keys = flatKey.split('.');
+    let currentLevel = nestedContent;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+
+      if (!currentLevel[key]) {
+        currentLevel[key] = {};
+      }
+      currentLevel = currentLevel[key];
+    }
+
+    currentLevel[keys[keys.length - 1]] =
+      flatKeys[flatKey] || originalContent[flatKey] || '';
+  });
+
+  return sortNestedKeys(nestedContent);
+};
+
+/**
+ * Sorts the keys of a nested object alphabetically at each level.
+ *
+ * @param obj - The nested object to sort.
+ * @returns The sorted object with keys sorted alphabetically at each level.
+ */
+export const sortNestedKeys = (
+  obj: Record<string, any>,
+): Record<string, any> => {
+  return Object.keys(obj)
+    .sort()
+    .reduce((sortedObj: Record<string, any>, key: string) => {
+      sortedObj[key] =
+        typeof obj[key] === 'object' && obj[key] !== null
+          ? sortNestedKeys(obj[key])
+          : obj[key];
+      return sortedObj;
+    }, {});
 };
 
 /**
@@ -116,18 +161,21 @@ export const generateTypesContent = (
   const generatedFiles = [];
 
   for (const [interfaceName, keys] of Object.entries(allKeys)) {
+    // Sort keys alphabetically
+    const sortedKeys = sortKeys(keys);
+
     // Prefix with "_" for all files except index.ts
     const typeFile = path.join(typesPath, `_${interfaceName.toLowerCase()}.ts`);
     const tsContent = `// This file was auto-generated from JSON. Do not edit it manually.
 
 export interface ${interfaceName} {
-${Object.keys(keys)
+${Object.keys(sortedKeys)
   .map((key) => `  "${key}": string;`)
   .join('\n')}
 }
 `;
     fs.writeFileSync(typeFile, tsContent);
-    console.log(
+    logger.info(
       `✅ Generated types for ${interfaceName} -> ${path.relative(process.cwd(), typeFile)}`,
     );
     generatedFiles.push(interfaceName);
@@ -150,7 +198,7 @@ ${combinedKeysContent}
   `;
 
   fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
-  console.log('✅ I18nKeys are created successfully!');
+  logger.info('✅ I18nKeys are created successfully!');
 };
 
 /**
