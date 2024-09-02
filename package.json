@@ -1,6 +1,6 @@
 {
   "name": "i18n-types-gen",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
@@ -19,7 +19,10 @@
     "rollback": "node scripts/rollback"
   },
   "standard-version": {
-    "preset": "angular"
+    "preset": "angular",
+    "scripts": {
+      "postbump": "git checkout -- dist"
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
