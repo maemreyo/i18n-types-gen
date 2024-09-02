@@ -22,11 +22,12 @@
     "preset": "angular"
   },
   "lint-staged": {
-    "**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write",
-      "tsc --noEmit"
-    ]
+  "**/*.{ts,tsx}": [
+    "eslint --fix",
+    "prettier --write",
+    "tsc --noEmit"
+  ],
+  "!dist/**/*": "echo Ignored"
   },
   "keywords": [
     "typescript",
