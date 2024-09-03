@@ -1,10 +1,9 @@
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 import {
   processLangFiles,
   updateLangFiles,
   generateTypesContent,
-  flattenKeys,
 } from './utils/fileOps';
 import { getNextVersionedDir } from './utils/versioning';
 import logger from './utils/logger';
@@ -59,11 +58,6 @@ export const generateTypes = async ({
         updateLangFiles(langDir, allKeys);
       }
     }
-
-    // Flatten keys for each interface
-    Object.keys(allKeys).forEach((interfaceName) => {
-      allKeys[interfaceName] = flattenKeys(allKeys[interfaceName]);
-    });
 
     // Dry Run: Only log the output, do not write files
     if (dryRun) {

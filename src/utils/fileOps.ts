@@ -10,14 +10,14 @@ import logger from './logger';
  * @param filePath - The path to the JSON file.
  * @returns The parsed JSON content or an empty object.
  */
-export const readJsonFile = (filePath: string): Record<string, string> => {
+export const readJsonFile = (filePath: string): Record<string, any> => {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
 
   if (fileContent.trim()) {
     try {
       return JSON.parse(fileContent);
     } catch (err) {
-      console.warn(
+      logger.warn(
         `⚠️  Warning: Failed to parse JSON file ${filePath}. Skipping...`,
       );
     }
@@ -27,8 +27,54 @@ export const readJsonFile = (filePath: string): Record<string, string> => {
 };
 
 /**
- * Processes all JSON files in a language directory, merges keys, and returns the merged result.
- * Warn if there's a conflict key
+ * Converts a nested JSON object into a flat object with dot notation keys.
+ *
+ * @param obj - The nested JSON object.
+ * @param prefix - The current prefix for nested keys (used during recursion).
+ * @returns A flat object with dot notation keys.
+ */
+export const normalizeJSON = (
+  obj: Record<string, any>,
+  prefix: string = '',
+): Record<string, string> => {
+  return Object.keys(obj).reduce((acc: Record<string, string>, k: string) => {
+    const pre = prefix.length ? `${prefix}.` : '';
+    if (typeof obj[k] === 'object' && obj[k] !== null) {
+      Object.assign(acc, normalizeJSON(obj[k], pre + k));
+    } else {
+      acc[pre + k] = obj[k];
+    }
+    return acc;
+  }, {});
+};
+
+/**
+ * Converts a flat key-value pair object into a nested JSON structure.
+ *
+ * @param data - The flat JSON object.
+ * @returns The nested JSON object.
+ */
+export const denormalizeJSON = (
+  data: Record<string, string>,
+): Record<string, any> => {
+  const result: Record<string, any> = {};
+  for (let flatKey in data) {
+    const keys = flatKey.split('.');
+    keys.reduce((acc, key, i) => {
+      if (i === keys.length - 1) {
+        acc[key] = data[flatKey];
+      } else {
+        acc[key] = acc[key] || {};
+      }
+      return acc[key];
+    }, result);
+  }
+  return result;
+};
+
+/**
+ * Processes all JSON files in a language directory, normalizes keys, merges them, and returns the merged result.
+ * Warns if there's a conflict key.
  *
  * @param langDir - The path to the language directory.
  * @param allKeys - The object containing the merged keys from all languages.
@@ -42,7 +88,7 @@ export const processLangFiles = (
   for (const file of files) {
     const jsonFilePath = path.join(langDir, file);
     const jsonContent = readJsonFile(jsonFilePath); // Keep original nested structure
-    const flatJsonContent = flattenKeys(jsonContent); // Flatten for merging and type generation
+    const flatJsonContent = normalizeJSON(jsonContent); // Normalize for merging and type generation
     const interfaceName = toPascal(path.basename(file, '.json'));
 
     if (!allKeys[interfaceName]) {
@@ -69,7 +115,7 @@ export const processLangFiles = (
  * sorts them, and writes the result back to the file, keeping the nested structure.
  *
  * @param langDir - The path to the language directory.
- * @param allKeys - The object containing the merged keys from all languages (flattened keys).
+ * @param allKeys - The object containing the merged keys from all languages (normalized keys).
  */
 export const updateLangFiles = (
   langDir: string,
@@ -83,8 +129,12 @@ export const updateLangFiles = (
     const interfaceName = toPascal(path.basename(file, '.json'));
     const allLangKeys = allKeys[interfaceName];
 
-    // Ensure all keys are present in the JSON file and maintain the nested structure
-    const updatedJsonContent = mergeNestedKeys(jsonContent, allLangKeys);
+    // Ensure all keys are present in the JSON file, maintaining the nested structure
+    const updatedFlatJsonContent = {
+      ...normalizeJSON(jsonContent),
+      ...allLangKeys,
+    };
+    const updatedJsonContent = denormalizeJSON(updatedFlatJsonContent);
 
     // Overwrite the original JSON file with the sorted and updated keys
     fs.writeFileSync(
@@ -93,66 +143,6 @@ export const updateLangFiles = (
       'utf-8',
     );
   }
-};
-
-/**
- * Merges the new flat keys into the existing nested JSON structure and sorts them alphabetically at each level.
- *
- * @param originalContent - The original nested JSON content.
- * @param flatKeys - The flat keys to be merged.
- * @returns The updated nested JSON content with keys sorted at each level.
- */
-export const mergeNestedKeys = (
-  originalContent: Record<string, any>,
-  flatKeys: Record<string, string>,
-): Record<string, any> => {
-  const nestedContent = { ...originalContent };
-
-  Object.keys(flatKeys).forEach((flatKey) => {
-    const keys = flatKey.split('.');
-    let currentLevel = nestedContent;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-
-      // If the current value is not an object or is null, convert it to an empty object
-      if (typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
-        currentLevel[key] = {};
-      }
-
-      currentLevel = currentLevel[key];
-    }
-
-    const finalKey = keys[keys.length - 1];
-
-    // Assign the value from the flat key to the correct nested structure
-    currentLevel[finalKey] = flatKeys[flatKey];
-
-    // Remove the flat key from the original structure after it's been nested
-    delete flatKeys[flatKey];
-  });
-
-  return sortNestedKeys(nestedContent);
-};
-
-/**
- * Sorts the keys of an object alphabetically, including nested objects.
- *
- * @param obj - The object to sort.
- * @returns The sorted object.
- */
-export const sortNestedKeys = (
-  obj: Record<string, any>,
-): Record<string, any> => {
-  return Object.keys(obj)
-    .sort()
-    .reduce((sortedObj: Record<string, any>, key: string) => {
-      sortedObj[key] =
-        typeof obj[key] === 'object' && obj[key] !== null
-          ? sortNestedKeys(obj[key])
-          : obj[key];
-      return sortedObj;
-    }, {});
 };
 
 /**
@@ -206,26 +196,4 @@ ${combinedKeysContent}
 
   fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
   logger.info('✅ I18nKeys are created successfully!');
-};
-
-/**
- * Converts a nested JSON object into a flat object with dot notation keys.
- *
- * @param obj - The nested JSON object.
- * @param prefix - The current prefix for nested keys (used during recursion).
- * @returns A flat object with dot notation keys.
- */
-export const flattenKeys = (
-  obj: Record<string, any>,
-  prefix: string = '',
-): Record<string, string> => {
-  return Object.keys(obj).reduce((acc: Record<string, string>, k: string) => {
-    const pre = prefix.length ? `${prefix}.` : '';
-    if (typeof obj[k] === 'object' && obj[k] !== null) {
-      Object.assign(acc, flattenKeys(obj[k], pre + k));
-    } else {
-      acc[pre + k] = obj[k];
-    }
-    return acc;
-  }, {});
 };
