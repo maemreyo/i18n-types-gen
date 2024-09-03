@@ -32,6 +32,7 @@ const fs = __importStar(require("fs"));
 const fileOps_1 = require("./utils/fileOps");
 const versioning_1 = require("./utils/versioning");
 const logger_1 = __importDefault(require("./utils/logger"));
+const stringOps_1 = require("./utils/stringOps");
 /**
  * Generate TypeScript interfaces from i18n JSON files with versioning.
  *
@@ -48,16 +49,22 @@ const generateTypes = async ({ localePath = path.resolve(process.cwd(), '_locale
     try {
         const languages = fs.readdirSync(localePath);
         const allKeys = {};
-        // First pass: Gather all unique keys across all JSON files
+        // Process and update each language's JSON files independently
         for (const lang of languages) {
             const langDir = path.join(localePath, lang);
-            (0, fileOps_1.processLangFiles)(langDir, allKeys);
-        }
-        // Second pass: Ensure all JSON files have the same keys, fill missing keys if needed
-        if (autoAddMissingKeys) {
-            for (const lang of languages) {
-                const langDir = path.join(localePath, lang);
-                (0, fileOps_1.updateLangFiles)(langDir, allKeys);
+            // Process the language files and gather normalized keys
+            (0, fileOps_1.processAndUpdateLangFiles)(langDir);
+            // Gather all unique keys across all JSON files
+            const files = fs.readdirSync(langDir);
+            for (const file of files) {
+                const jsonFilePath = path.join(langDir, file);
+                const jsonContent = (0, fileOps_1.normalizeJSON)((0, fileOps_1.readJsonFile)(jsonFilePath));
+                const interfaceName = (0, stringOps_1.toPascal)(path.basename(file, '.json'));
+                if (!allKeys[interfaceName]) {
+                    allKeys[interfaceName] = {};
+                }
+                // Merge the normalized keys into the allKeys object
+                Object.assign(allKeys[interfaceName], jsonContent);
             }
         }
         // Dry Run: Only log the output, do not write files

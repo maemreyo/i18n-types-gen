@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateTypesContent = exports.updateLangFiles = exports.processLangFiles = exports.denormalizeJSON = exports.normalizeJSON = exports.readJsonFile = void 0;
+exports.generateTypesContent = exports.updateLangFiles = exports.sortNestedKeys = exports.processAndUpdateLangFiles = exports.denormalizeJSON = exports.normalizeJSON = exports.readJsonFile = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const stringOps_1 = require("./stringOps");
@@ -98,33 +98,41 @@ const denormalizeJSON = (data) => {
 };
 exports.denormalizeJSON = denormalizeJSON;
 /**
- * Processes all JSON files in a language directory, normalizes keys, merges them, and returns the merged result.
- * Warns if there's a conflict key.
+ * Processes and updates JSON files in a language directory, normalizing and denormalizing keys.
+ * Each language's keys are processed independently.
  *
  * @param langDir - The path to the language directory.
- * @param allKeys - The object containing the merged keys from all languages.
  */
-const processLangFiles = (langDir, allKeys) => {
+const processAndUpdateLangFiles = (langDir) => {
     const files = fs.readdirSync(langDir);
-    for (const file of files) {
+    files.forEach((file) => {
         const jsonFilePath = path.join(langDir, file);
-        const jsonContent = (0, exports.readJsonFile)(jsonFilePath); // Keep original nested structure
-        const flatJsonContent = (0, exports.normalizeJSON)(jsonContent); // Normalize for merging and type generation
-        const interfaceName = (0, stringOps_1.toPascal)(path.basename(file, '.json'));
-        if (!allKeys[interfaceName]) {
-            allKeys[interfaceName] = {};
-        }
-        // Merge keys and check for conflicts
-        Object.keys(flatJsonContent).forEach((key) => {
-            if (allKeys[interfaceName][key] &&
-                allKeys[interfaceName][key] !== flatJsonContent[key]) {
-                logger_1.default.warn(`⚠️ Conflict detected: Key "${key}" has different values across languages.`);
-            }
-            allKeys[interfaceName][key] = flatJsonContent[key];
-        });
-    }
+        const jsonContent = (0, exports.readJsonFile)(jsonFilePath);
+        const normalizedKeys = (0, exports.normalizeJSON)(jsonContent);
+        const denormalizedKeys = (0, exports.denormalizeJSON)(normalizedKeys);
+        const sortedJsonContent = (0, exports.sortNestedKeys)(denormalizedKeys);
+        fs.writeFileSync(jsonFilePath, JSON.stringify(sortedJsonContent, null, 2), 'utf-8');
+    });
 };
-exports.processLangFiles = processLangFiles;
+exports.processAndUpdateLangFiles = processAndUpdateLangFiles;
+/**
+ * Sorts the keys of an object alphabetically, including nested objects.
+ *
+ * @param obj - The object to sort.
+ * @returns The sorted object.
+ */
+const sortNestedKeys = (obj) => {
+    return Object.keys(obj)
+        .sort()
+        .reduce((sortedObj, key) => {
+        sortedObj[key] =
+            typeof obj[key] === 'object' && obj[key] !== null
+                ? (0, exports.sortNestedKeys)(obj[key])
+                : obj[key];
+        return sortedObj;
+    }, {});
+};
+exports.sortNestedKeys = sortNestedKeys;
 /**
  * Ensures that all JSON files in a language directory contain all the merged keys,
  * sorts them, and writes the result back to the file, keeping the nested structure.

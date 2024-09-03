@@ -76,41 +76,47 @@ export const denormalizeJSON = (
 };
 
 /**
- * Processes all JSON files in a language directory, normalizes keys, merges them, and returns the merged result.
- * Warns if there's a conflict key.
+ * Processes and updates JSON files in a language directory, normalizing and denormalizing keys.
+ * Each language's keys are processed independently.
  *
  * @param langDir - The path to the language directory.
- * @param allKeys - The object containing the merged keys from all languages.
  */
-export const processLangFiles = (
-  langDir: string,
-  allKeys: Record<string, Record<string, string>>,
-) => {
+export const processAndUpdateLangFiles = (langDir: string) => {
   const files = fs.readdirSync(langDir);
 
-  for (const file of files) {
+  files.forEach((file) => {
     const jsonFilePath = path.join(langDir, file);
-    const jsonContent = readJsonFile(jsonFilePath); // Keep original nested structure
-    const flatJsonContent = normalizeJSON(jsonContent); // Normalize for merging and type generation
-    const interfaceName = toPascal(path.basename(file, '.json'));
+    const jsonContent = readJsonFile(jsonFilePath);
+    const normalizedKeys = normalizeJSON(jsonContent);
+    const denormalizedKeys = denormalizeJSON(normalizedKeys);
+    const sortedJsonContent = sortNestedKeys(denormalizedKeys);
 
-    if (!allKeys[interfaceName]) {
-      allKeys[interfaceName] = {};
-    }
+    fs.writeFileSync(
+      jsonFilePath,
+      JSON.stringify(sortedJsonContent, null, 2),
+      'utf-8',
+    );
+  });
+};
 
-    // Merge keys and check for conflicts
-    Object.keys(flatJsonContent).forEach((key) => {
-      if (
-        allKeys[interfaceName][key] &&
-        allKeys[interfaceName][key] !== flatJsonContent[key]
-      ) {
-        logger.warn(
-          `⚠️ Conflict detected: Key "${key}" has different values across languages.`,
-        );
-      }
-      allKeys[interfaceName][key] = flatJsonContent[key];
-    });
-  }
+/**
+ * Sorts the keys of an object alphabetically, including nested objects.
+ *
+ * @param obj - The object to sort.
+ * @returns The sorted object.
+ */
+export const sortNestedKeys = (
+  obj: Record<string, any>,
+): Record<string, any> => {
+  return Object.keys(obj)
+    .sort()
+    .reduce((sortedObj: Record<string, any>, key: string) => {
+      sortedObj[key] =
+        typeof obj[key] === 'object' && obj[key] !== null
+          ? sortNestedKeys(obj[key])
+          : obj[key];
+      return sortedObj;
+    }, {});
 };
 
 /**

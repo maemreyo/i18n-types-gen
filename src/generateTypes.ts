@@ -1,12 +1,14 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import {
-  processLangFiles,
-  updateLangFiles,
+  processAndUpdateLangFiles,
   generateTypesContent,
+  normalizeJSON,
+  readJsonFile,
 } from './utils/fileOps';
 import { getNextVersionedDir } from './utils/versioning';
 import logger from './utils/logger';
+import { toPascal } from './utils/stringOps';
 
 interface GenerateTypesOptions {
   localePath?: string;
@@ -45,17 +47,26 @@ export const generateTypes = async ({
     const languages = fs.readdirSync(localePath);
     const allKeys: Record<string, Record<string, string>> = {};
 
-    // First pass: Gather all unique keys across all JSON files
+    // Process and update each language's JSON files independently
     for (const lang of languages) {
       const langDir = path.join(localePath, lang);
-      processLangFiles(langDir, allKeys);
-    }
 
-    // Second pass: Ensure all JSON files have the same keys, fill missing keys if needed
-    if (autoAddMissingKeys) {
-      for (const lang of languages) {
-        const langDir = path.join(localePath, lang);
-        updateLangFiles(langDir, allKeys);
+      // Process the language files and gather normalized keys
+      processAndUpdateLangFiles(langDir);
+
+      // Gather all unique keys across all JSON files
+      const files = fs.readdirSync(langDir);
+      for (const file of files) {
+        const jsonFilePath = path.join(langDir, file);
+        const jsonContent = normalizeJSON(readJsonFile(jsonFilePath));
+        const interfaceName = toPascal(path.basename(file, '.json'));
+
+        if (!allKeys[interfaceName]) {
+          allKeys[interfaceName] = {};
+        }
+
+        // Merge the normalized keys into the allKeys object
+        Object.assign(allKeys[interfaceName], jsonContent);
       }
     }
 
