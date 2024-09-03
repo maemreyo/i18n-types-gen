@@ -12,7 +12,7 @@ const runCommand = (command) => {
   try {
     execSync(command, { stdio: 'inherit' });
   } catch (error) {
-    console.error(`\n❌ Failed to execute command: "${command}"`);
+    console.error(`\n❌ Failed to execute command: "${command}" `);
     console.error('🔍 Error details:', error.message);
     process.exit(1);
   }
