@@ -86,7 +86,10 @@ const denormalizeJSON = (data) => {
                 acc[key] = data[flatKey];
             }
             else {
-                acc[key] = acc[key] || {};
+                // Ensure that the current key is an object. If it's not, replace it with an object.
+                if (typeof acc[key] !== 'object' || acc[key] === null) {
+                    acc[key] = {};
+                }
             }
             return acc[key];
         }, result);
