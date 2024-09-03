@@ -115,7 +115,7 @@ export const mergeNestedKeys = (
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
 
-      // If the current value is not an object, convert it to an empty object
+      // If the current value is not an object or is null, convert it to an empty object
       if (typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
         currentLevel[key] = {};
       }
@@ -125,25 +125,21 @@ export const mergeNestedKeys = (
 
     const finalKey = keys[keys.length - 1];
 
-    // Remove the flat key if the nested key already exists
-    if (
-      typeof currentLevel[finalKey] === 'object' &&
-      finalKey in currentLevel
-    ) {
-      delete flatKeys[flatKey];
-    } else {
-      currentLevel[finalKey] = flatKeys[flatKey];
-    }
+    // Assign the value from the flat key to the correct nested structure
+    currentLevel[finalKey] = flatKeys[flatKey];
+
+    // Remove the flat key from the original structure after it's been nested
+    delete flatKeys[flatKey];
   });
 
   return sortNestedKeys(nestedContent);
 };
 
 /**
- * Sorts the keys of a nested object alphabetically at each level.
+ * Sorts the keys of an object alphabetically, including nested objects.
  *
- * @param obj - The nested object to sort.
- * @returns The sorted object with keys sorted alphabetically at each level.
+ * @param obj - The object to sort.
+ * @returns The sorted object.
  */
 export const sortNestedKeys = (
   obj: Record<string, any>,
