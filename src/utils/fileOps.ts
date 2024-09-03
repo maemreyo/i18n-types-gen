@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { toPascal, sortKeys } from './stringOps';
 import logger from './logger';
 
@@ -115,9 +115,10 @@ export const mergeNestedKeys = (
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
 
-      if (!currentLevel[key]) {
+      if (typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
         currentLevel[key] = {};
       }
+
       currentLevel = currentLevel[key];
     }
 
