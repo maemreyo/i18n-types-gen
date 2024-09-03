@@ -137,7 +137,10 @@ const updateLangFiles = (langDir, allKeys) => {
         const interfaceName = (0, stringOps_1.toPascal)(path.basename(file, '.json'));
         const allLangKeys = allKeys[interfaceName];
         // Ensure all keys are present in the JSON file, maintaining the nested structure
-        const updatedFlatJsonContent = { ...(0, exports.normalizeJSON)(jsonContent), ...allLangKeys };
+        const updatedFlatJsonContent = {
+            ...(0, exports.normalizeJSON)(jsonContent),
+            ...allLangKeys,
+        };
         const updatedJsonContent = (0, exports.denormalizeJSON)(updatedFlatJsonContent);
         // Overwrite the original JSON file with the sorted and updated keys
         fs.writeFileSync(jsonFilePath, JSON.stringify(updatedJsonContent, null, 2), 'utf-8');
