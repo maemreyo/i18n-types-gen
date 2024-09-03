@@ -1,11 +1,34 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.flattenKeys = exports.generateTypesContent = exports.sortNestedKeys = exports.mergeNestedKeys = exports.updateLangFiles = exports.processLangFiles = exports.readJsonFile = void 0;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const stringOps_1 = require("./stringOps");
 const logger_1 = __importDefault(require("./logger"));
 /**
@@ -16,7 +39,7 @@ const logger_1 = __importDefault(require("./logger"));
  * @returns The parsed JSON content or an empty object.
  */
 const readJsonFile = (filePath) => {
-    const fileContent = fs_1.default.readFileSync(filePath, 'utf-8');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
     if (fileContent.trim()) {
         try {
             return JSON.parse(fileContent);
@@ -36,12 +59,12 @@ exports.readJsonFile = readJsonFile;
  * @param allKeys - The object containing the merged keys from all languages.
  */
 const processLangFiles = (langDir, allKeys) => {
-    const files = fs_1.default.readdirSync(langDir);
+    const files = fs.readdirSync(langDir);
     for (const file of files) {
-        const jsonFilePath = path_1.default.join(langDir, file);
+        const jsonFilePath = path.join(langDir, file);
         const jsonContent = (0, exports.readJsonFile)(jsonFilePath); // Keep original nested structure
         const flatJsonContent = (0, exports.flattenKeys)(jsonContent); // Flatten for merging and type generation
-        const interfaceName = (0, stringOps_1.toPascal)(path_1.default.basename(file, '.json'));
+        const interfaceName = (0, stringOps_1.toPascal)(path.basename(file, '.json'));
         if (!allKeys[interfaceName]) {
             allKeys[interfaceName] = {};
         }
@@ -64,16 +87,16 @@ exports.processLangFiles = processLangFiles;
  * @param allKeys - The object containing the merged keys from all languages (flattened keys).
  */
 const updateLangFiles = (langDir, allKeys) => {
-    const files = fs_1.default.readdirSync(langDir);
+    const files = fs.readdirSync(langDir);
     for (const file of files) {
-        const jsonFilePath = path_1.default.join(langDir, file);
+        const jsonFilePath = path.join(langDir, file);
         const jsonContent = (0, exports.readJsonFile)(jsonFilePath);
-        const interfaceName = (0, stringOps_1.toPascal)(path_1.default.basename(file, '.json'));
+        const interfaceName = (0, stringOps_1.toPascal)(path.basename(file, '.json'));
         const allLangKeys = allKeys[interfaceName];
         // Ensure all keys are present in the JSON file and maintain the nested structure
         const updatedJsonContent = (0, exports.mergeNestedKeys)(jsonContent, allLangKeys);
         // Overwrite the original JSON file with the sorted and updated keys
-        fs_1.default.writeFileSync(jsonFilePath, JSON.stringify(updatedJsonContent, null, 2), 'utf-8');
+        fs.writeFileSync(jsonFilePath, JSON.stringify(updatedJsonContent, null, 2), 'utf-8');
     }
 };
 exports.updateLangFiles = updateLangFiles;
@@ -91,7 +114,7 @@ const mergeNestedKeys = (originalContent, flatKeys) => {
         let currentLevel = nestedContent;
         for (let i = 0; i < keys.length - 1; i++) {
             const key = keys[i];
-            if (!currentLevel[key]) {
+            if (typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
                 currentLevel[key] = {};
             }
             currentLevel = currentLevel[key];
@@ -132,7 +155,7 @@ const generateTypesContent = (allKeys, typesPath) => {
         // Sort keys alphabetically
         const sortedKeys = (0, stringOps_1.sortKeys)(keys);
         // Prefix with "_" for all files except index.ts
-        const typeFile = path_1.default.join(typesPath, `_${interfaceName.toLowerCase()}.ts`);
+        const typeFile = path.join(typesPath, `_${interfaceName.toLowerCase()}.ts`);
         const tsContent = `// This file was auto-generated from JSON. Do not edit it manually.
 
 export interface ${interfaceName} {
@@ -141,8 +164,8 @@ ${Object.keys(sortedKeys)
             .join('\n')}
 }
 `;
-        fs_1.default.writeFileSync(typeFile, tsContent);
-        logger_1.default.info(`✅ Generated types for ${interfaceName} -> ${path_1.default.relative(process.cwd(), typeFile)}`);
+        fs.writeFileSync(typeFile, tsContent);
+        logger_1.default.info(`✅ Generated types for ${interfaceName} -> ${path.relative(process.cwd(), typeFile)}`);
         generatedFiles.push(interfaceName);
     }
     // Generate index.ts that combines all interfaces without "_"
@@ -159,7 +182,7 @@ ${importsContent}
 
 ${combinedKeysContent}
   `;
-    fs_1.default.writeFileSync(path_1.default.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
+    fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
     logger_1.default.info('✅ I18nKeys are created successfully!');
 };
 exports.generateTypesContent = generateTypesContent;
