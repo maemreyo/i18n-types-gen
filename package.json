@@ -1,6 +1,6 @@
 {
   "name": "i18n-types-gen",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
