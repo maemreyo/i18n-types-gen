@@ -115,6 +115,7 @@ export const mergeNestedKeys = (
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
 
+      // If the current value is not an object, convert it to an empty object
       if (typeof currentLevel[key] !== 'object' || currentLevel[key] === null) {
         currentLevel[key] = {};
       }
@@ -122,8 +123,17 @@ export const mergeNestedKeys = (
       currentLevel = currentLevel[key];
     }
 
-    currentLevel[keys[keys.length - 1]] =
-      flatKeys[flatKey] || originalContent[flatKey] || '';
+    const finalKey = keys[keys.length - 1];
+
+    // Remove the flat key if the nested key already exists
+    if (
+      typeof currentLevel[finalKey] === 'object' &&
+      finalKey in currentLevel
+    ) {
+      delete flatKeys[flatKey];
+    } else {
+      currentLevel[finalKey] = flatKeys[flatKey];
+    }
   });
 
   return sortNestedKeys(nestedContent);
