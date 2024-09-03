@@ -1,7 +1,7 @@
 {
   "name": "i18n-types-gen",
   "version": "1.0.22",
-  "description": "",
+  "description": "A TypeScript utility for generating strongly-typed i18n keys from JSON language files. Supports versioning, key conflict detection, and custom output directories.",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
   "license": "MIT",
@@ -31,10 +31,14 @@
   },
   "keywords": [
     "typescript",
-    "openapi",
-    "api",
-    "generator",
-    "paths"
+    "i18n",
+    "localization",
+    "translation",
+    "type generation",
+    "json",
+    "typescript utilities",
+    "language files",
+    "versioning"
   ],
   "author": "Matthew Ngo <matthew.ngo1114@gmail.com>",
   "repository": {
