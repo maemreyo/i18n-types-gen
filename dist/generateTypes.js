@@ -34,17 +34,17 @@ const versioning_1 = require("./utils/versioning");
 const logger_1 = __importDefault(require("./utils/logger"));
 const stringOps_1 = require("./utils/stringOps");
 /**
- * Generate TypeScript interfaces from i18n JSON files with versioning.
+ * Generate TypeScript interfaces from i18n JSON files with optional versioning.
  *
  * @param options - The options object containing paths and feature flags.
  */
-const generateTypes = async ({ localePath = path.resolve(process.cwd(), '_locales'), typesPath = path.resolve(process.cwd(), '_types/i18n'), autoAddMissingKeys = true, dryRun = false, }) => {
-    // Determine the versioned output directory
-    const versionedTypesDir = path.join(typesPath, '..', (0, versioning_1.getNextVersionedDir)(path.join(typesPath, '..'), path.basename(typesPath)));
-    // Create the versioned types directory if it doesn't exist
-    if (!dryRun && !fs.existsSync(versionedTypesDir)) {
-        fs.mkdirSync(versionedTypesDir, { recursive: true });
-        logger_1.default.info(`📁 Created versioned types directory: ${path.relative(process.cwd(), versionedTypesDir)}`);
+const generateTypes = async ({ localePath = path.resolve(process.cwd(), '_locales'), typesPath = path.resolve(process.cwd(), '_types/i18n'), autoAddMissingKeys = true, dryRun = false, enableVersioning = false, }) => {
+    const outputTypesDir = enableVersioning
+        ? path.join(typesPath, '..', (0, versioning_1.getNextVersionedDir)(path.join(typesPath, '..'), path.basename(typesPath)))
+        : typesPath;
+    if (!dryRun && !fs.existsSync(outputTypesDir)) {
+        fs.mkdirSync(outputTypesDir, { recursive: true });
+        logger_1.default.info(`📁 Created types directory: ${path.relative(process.cwd(), outputTypesDir)}`);
     }
     try {
         const languages = fs.readdirSync(localePath);
@@ -73,8 +73,8 @@ const generateTypes = async ({ localePath = path.resolve(process.cwd(), '_locale
             logger_1.default.info(JSON.stringify(allKeys, null, 2));
             return;
         }
-        // Generate TypeScript files in the versioned directory
-        (0, fileOps_1.generateTypesContent)(allKeys, versionedTypesDir);
+        // Generate TypeScript files in the output directory (versioned or not)
+        (0, fileOps_1.generateTypesContent)(allKeys, outputTypesDir);
         logger_1.default.info('\n🎉 All tasks completed successfully!');
         logger_1.default.info('\n🚀 You can now continue with your development.\n');
     }
