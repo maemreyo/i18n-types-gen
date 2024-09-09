@@ -15,10 +15,11 @@ interface GenerateTypesOptions {
   typesPath?: string;
   autoAddMissingKeys?: boolean;
   dryRun?: boolean;
+  enableVersioning?: boolean;
 }
 
 /**
- * Generate TypeScript interfaces from i18n JSON files with versioning.
+ * Generate TypeScript interfaces from i18n JSON files with optional versioning.
  *
  * @param options - The options object containing paths and feature flags.
  */
@@ -27,19 +28,23 @@ export const generateTypes = async ({
   typesPath = path.resolve(process.cwd(), '_types/i18n'),
   autoAddMissingKeys = true,
   dryRun = false,
+  enableVersioning = false,
 }: GenerateTypesOptions) => {
-  // Determine the versioned output directory
-  const versionedTypesDir = path.join(
-    typesPath,
-    '..',
-    getNextVersionedDir(path.join(typesPath, '..'), path.basename(typesPath)),
-  );
+  const outputTypesDir = enableVersioning
+    ? path.join(
+        typesPath,
+        '..',
+        getNextVersionedDir(
+          path.join(typesPath, '..'),
+          path.basename(typesPath),
+        ),
+      )
+    : typesPath;
 
-  // Create the versioned types directory if it doesn't exist
-  if (!dryRun && !fs.existsSync(versionedTypesDir)) {
-    fs.mkdirSync(versionedTypesDir, { recursive: true });
+  if (!dryRun && !fs.existsSync(outputTypesDir)) {
+    fs.mkdirSync(outputTypesDir, { recursive: true });
     logger.info(
-      `📁 Created versioned types directory: ${path.relative(process.cwd(), versionedTypesDir)}`,
+      `📁 Created types directory: ${path.relative(process.cwd(), outputTypesDir)}`,
     );
   }
 
@@ -79,8 +84,8 @@ export const generateTypes = async ({
       return;
     }
 
-    // Generate TypeScript files in the versioned directory
-    generateTypesContent(allKeys, versionedTypesDir);
+    // Generate TypeScript files in the output directory (versioned or not)
+    generateTypesContent(allKeys, outputTypesDir);
 
     logger.info('\n🎉 All tasks completed successfully!');
     logger.info('\n🚀 You can now continue with your development.\n');

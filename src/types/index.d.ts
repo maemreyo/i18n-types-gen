@@ -25,6 +25,13 @@ export interface GenerateTypesOptions {
    * Default: false
    */
   dryRun?: boolean;
+
+  /**
+   * Enable or disable versioning for the generated TypeScript files.
+   * If enabled, the types will be versioned and saved in versioned directories.
+   * Default: true
+   */
+  enableVersioning?: boolean;
 }
 
 /**
@@ -42,6 +49,7 @@ export interface GenerateTypesOptions {
  *   typesPath: './src/types/i18n',
  *   autoAddMissingKeys: true,
  *   dryRun: false,
+ *   enableVersioning: true, // Enable versioning
  * });
  * ```
  */
