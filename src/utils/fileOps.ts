@@ -182,7 +182,10 @@ ${Object.keys(sortedKeys)
 `;
     fs.writeFileSync(typeFile, tsContent);
     logger.info(
-      `✅ Generated types for ${interfaceName} -> ${path.relative(process.cwd(), typeFile)}`,
+      `✅ Generated types for ${interfaceName} -> ${path.relative(
+        process.cwd(),
+        typeFile,
+      )}`,
     );
     generatedFiles.push(interfaceName);
   }
@@ -197,10 +200,18 @@ export type I18nKeys = ${generatedFiles
     .join(' | ')};
   `;
 
+  const namespacesContent = `
+export type I18nNamespace = ${generatedFiles
+    .map((name) => `"${name.toLowerCase()}"`)
+    .join(' | ')};
+  `;
+
   const indexContent = `
 ${importsContent}
 
 ${combinedKeysContent}
+
+${namespacesContent}
   `;
 
   fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
