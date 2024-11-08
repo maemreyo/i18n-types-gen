@@ -1,6 +1,6 @@
 {
   "name": "i18n-types-gen",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "A TypeScript utility for generating strongly-typed i18n keys from JSON language files. Supports versioning, key conflict detection, and custom output directories.",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
