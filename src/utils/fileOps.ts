@@ -212,6 +212,7 @@ ${importsContent}
 ${combinedKeysContent}
 
 ${namespacesContent}
+
   `;
 
   fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
