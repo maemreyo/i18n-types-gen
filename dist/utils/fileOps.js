@@ -192,10 +192,18 @@ export type I18nKeys = ${generatedFiles
         .map((name) => `keyof ${name}`)
         .join(' | ')};
   `;
+    const namespacesContent = `
+export type I18nNamespace = ${generatedFiles
+        .map((name) => `"${name.toLowerCase()}"`)
+        .join(' | ')};
+  `;
     const indexContent = `
 ${importsContent}
 
 ${combinedKeysContent}
+
+${namespacesContent}
+
   `;
     fs.writeFileSync(path.join(typesPath, 'index.ts'), indexContent); // No "_" prefix for index.ts
     logger_1.default.info('✅ I18nKeys are created successfully!');
